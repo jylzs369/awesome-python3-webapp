@@ -3,27 +3,47 @@
 {% block title %}日志{% endblock %}
 
 {% block beforehead %}
-
 <script>
+    var page_index = {{ page_index }}
+    function initVM(data) {
+        var vm = new Vue({
+            el: '#vm',
+            data: {
+                blogs: data.blogs,
+                page: data.page
+            },
+            methods: {
+            }
+        });
+        $('#vm').show();
+    }
+    $(function() {
+        getJSON('/api/blogs', {
+            page: page_index
+        }, function (err, results) {
+            if (err) {
+                return fatal(err);
+            }
+            initVM(results);
+        });
+    });
 </script>
-
 {% endblock %}
 
 {% block content %}
 
-    <div class="uk-width-medium-3-4">
-    {% for blog in blogs %}
-        <article class="uk-article">
-            <h2><a href="/blog/{{ blog.id }}">{{ blog.name }}</a></h2>
-            <p class="uk-article-meta">发表于{{ blog.created_at|datetime }}</p>
-            <p>{{ blog.summary }}</p>
-            <p><a href="/blog/{{ blog.id }}">继续阅读 <i class="uk-icon-angle-double-right"></i></a></p>
+    <div id="vm" class="uk-width-medium-3-4">
+        <article class="uk-article" v-repeat="blog: blogs">
+            <h2><a v-attr="href: '/blog/'+blog.id" v-text="blog.name"></a></h2>
+            <p class="uk-article-meta" v-text="'发表于' + blog.created_at.toDateTime()"></p>
+            <p v-text="blog.summary || '-'"></p>
+            <p><a v-attr="href: '/blog/'+blog.id">继续阅读 <i class="uk-icon-angle-double-right"></i></a></p>
         </article>
         <hr class="uk-article-divider">
-    {% endfor %}
+        <div v-component="pagination" v-with="page"></div>
     </div>
 
-    <div class="uk-width-medium-1-4">
+    <aside class="uk-width-medium-1-4">
         <div class="uk-panel uk-panel-header">
             <h3 class="uk-panel-title">友情链接</h3>
             <ul class="uk-list uk-list-line">
@@ -33,6 +53,6 @@
                 <li><i class="uk-icon-thumbs-o-up"></i> <a target="_blank" href="http://www.liaoxuefeng.com/wiki/0013739516305929606dd18361248578c67b8067c8c017b000">Git教程</a></li>
             </ul>
         </div>
-    </div>
+    </aside>
 
 {% endblock %}
